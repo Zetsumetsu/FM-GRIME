@@ -21,7 +21,7 @@ Six voices, **fixed engines** per voice (keeps it immediate, no menu diving).
 
 **Per voice:** trigger in · pitch knob · decay knob · character knob (engine-specific, see above) · mute button · red activity LED (trigger flash, envelope-following PWM brightness) · individual out (pre-degrade).
 
-**CV inputs (2026-10-05):** PITCH CV on kick, perc, wild — 1V/oct, pitch knob = base offset. DECAY CV on closed/open hats — 0–5V extends decay for dynamic hat patterns. (Snare: no CV — keeps the panel slim where it matters least.)
+**CV inputs (2026-10-05):** PITCH CV on kick, perc, wild — 1V/oct, pitch knob = base offset. DECAY CV on closed/open hats — 0–5V extends decay for dynamic hat patterns. CHAR CV on snare — sweeps snap→snarl so ghost notes stay clean while accents crush.
 
 Hats stay crisp by design — clean hats make the nasty kick/snare hit harder.
 
@@ -40,7 +40,8 @@ Hats stay crisp by design — clean hats make the nasty kick/snare hit harder.
 - 1× degrade CV in (conditioned to 3.3V ADC range)
 - 3× pitch CV in — kick, perc, wild (1V/oct, conditioned; knob = base offset)
 - 2× decay CV in — closed/open hats (0–5V extends decay)
-- 22 pots + 6 CV = 28 analog inputs (of 32 mux channels — headroom to spare)
+- 1× char CV in — snare (sweeps snap→snarl)
+- 22 pots + 7 CV = 29 analog inputs (of 32 mux channels)
 
 ## Hardware
 
