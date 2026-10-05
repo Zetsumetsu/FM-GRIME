@@ -19,7 +19,9 @@ Six voices, **fixed engines** per voice (keeps it immediate, no menu diving).
 | V5 PERC | 2-op FM blip, wide pitch range. Character = FM index: woody low half (toms, conga-ish) → glassy digital top half (claves, zaps). |
 | V6 WILD | FM sweep engine: every trigger fires a pitch envelope plus a modulator-ratio sweep. Character = sweep madness: gentle FM wobble → full ratio chaos with slight per-hit random detune. Laser zaps, droid blips, metallic chirps. |
 
-**Per voice:** trigger in · pitch knob · decay knob · character knob (engine-specific, see above) · mute button · red activity LED (trigger flash, envelope-following PWM brightness) · individual out (pre-degrade).
+**Per voice:** trigger in · pitch knob · decay knob · character knob (engine-specific, see above) · illuminated mute button (doubles as the activity LED) · individual out (pre-degrade).
+
+**Mute/activity LED behavior (2026-10-05):** playing = dark at rest, bright flash on trigger decaying with the envelope; muted = dim steady red glow (reads at a glance in the dark), still flashes brighter on incoming triggers so you can see a muted voice receiving hits.
 
 **CV inputs (2026-10-05):** PITCH CV on kick, perc, wild — 1V/oct, pitch knob = base offset. DECAY CV on closed/open hats — 0–5V extends decay for dynamic hat patterns. CHAR CV on snare — sweeps snap→snarl so ghost notes stay clean while accents crush.
 
@@ -47,8 +49,8 @@ Hats stay crisp by design — clean hats make the nasty kick/snare hit harder.
 
 - **MCU:** Teensy 4.1 (i.MX RT1062 @ 600 MHz). DSP load estimate: 5–15% at 44.1 kHz — six 2-op voices, envelopes, wavefolding, and the degrade bus are trivial for the M7.
 - **DAC:** CS42448 codec over TDM — 8 DAC outputs (7 used, 1 spare; spare could become a click/cue out later). Supported directly by the Teensy Audio Library (`AudioOutputTDM` + `AudioControlCS42448`). Quality-over-price pick. QFP-48, 0.5 mm pitch — drag-solderable or fab-assembled; needs clean analog layout per datasheet.
-- **Pots/CV:** 2× CD74HC4067 16-channel analog muxes (28 channels used of 32: 22 pots + 6 CV) — standard DIY approach; Teensy 4.1's 18 ADC pins aren't enough alone.
-- **Buttons/LEDs:** 6 mute buttons + 6 activity LEDs on GPIO — plenty of pins.
+- **Pots/CV:** 2× CD74HC4067 16-channel analog muxes (29 channels used of 32: 22 pots + 7 CV) — standard DIY approach; Teensy 4.1's 18 ADC pins aren't enough alone.
+- **Buttons/LEDs:** 6 illuminated mute buttons (integrated red LEDs) on GPIO — plenty of pins.
 - **Power:** Eurorack ±12 V regulated down (5 V for Teensy/DAC); modest current draw.
 
 ## Panel
