@@ -21,6 +21,8 @@ Six voices, **fixed engines** per voice (keeps it immediate, no menu diving).
 
 **Per voice:** trigger in · pitch knob · decay knob · character knob (engine-specific, see above) · mute button · red activity LED (trigger flash, envelope-following PWM brightness) · individual out (pre-degrade).
 
+**CV inputs (2026-10-05):** PITCH CV on kick, perc, wild — 1V/oct, pitch knob = base offset. DECAY CV on closed/open hats — 0–5V extends decay for dynamic hat patterns. (Snare: no CV — keeps the panel slim where it matters least.)
+
 Hats stay crisp by design — clean hats make the nasty kick/snare hit harder.
 
 ## Global section
@@ -36,13 +38,15 @@ Hats stay crisp by design — clean hats make the nasty kick/snare hit harder.
 - 6× trigger in (conditioned: Teensy pins are 3.3V, not 5V-tolerant — divider/transistor per input, standard practice)
 - 6× individual voice out (pre-degrade) + 1× main out (post-degrade) = 7 DAC channels used
 - 1× degrade CV in (conditioned to 3.3V ADC range)
-- 22 pots + 1 CV → 23 analog inputs (see hardware)
+- 3× pitch CV in — kick, perc, wild (1V/oct, conditioned; knob = base offset)
+- 2× decay CV in — closed/open hats (0–5V extends decay)
+- 22 pots + 6 CV = 28 analog inputs (of 32 mux channels — headroom to spare)
 
 ## Hardware
 
 - **MCU:** Teensy 4.1 (i.MX RT1062 @ 600 MHz). DSP load estimate: 5–15% at 44.1 kHz — six 2-op voices, envelopes, wavefolding, and the degrade bus are trivial for the M7.
 - **DAC:** CS42448 codec over TDM — 8 DAC outputs (7 used, 1 spare; spare could become a click/cue out later). Supported directly by the Teensy Audio Library (`AudioOutputTDM` + `AudioControlCS42448`). Quality-over-price pick. QFP-48, 0.5 mm pitch — drag-solderable or fab-assembled; needs clean analog layout per datasheet.
-- **Pots/CV:** 2× CD74HC4067 16-channel analog muxes (23 channels on ~6 GPIO) — standard DIY approach; Teensy 4.1's 18 ADC pins aren't enough alone.
+- **Pots/CV:** 2× CD74HC4067 16-channel analog muxes (28 channels used of 32: 22 pots + 6 CV) — standard DIY approach; Teensy 4.1's 18 ADC pins aren't enough alone.
 - **Buttons/LEDs:** 6 mute buttons + 6 activity LEDs on GPIO — plenty of pins.
 - **Power:** Eurorack ±12 V regulated down (5 V for Teensy/DAC); modest current draw.
 
