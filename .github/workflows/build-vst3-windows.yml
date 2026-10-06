@@ -1,0 +1,28 @@
+name: Build VST3 (Windows)
+
+on:
+  push:
+    paths:
+      - 'vst-plugin/**'
+      - '.github/workflows/build-vst3-windows.yml'
+  workflow_dispatch:
+
+jobs:
+  build-vst3:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Configure (CMake)
+        run: cmake -B build -S vst-plugin -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build VST3
+        run: cmake --build build --config Release
+
+      - name: Upload VST3 bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: FM-GRIME-VST3-windows
+          path: build/FmGrimeVST_artefacts/Release/VST3/FM GRIME.vst3
