@@ -1,25 +1,40 @@
-# FM GRIME
+# FM GRIME — VST3 plugin (DAW version)
 
-FM GRIME — a 6-voice fully-FM Eurorack drum synthesizer on Teensy 4.1: dirty FM kicks, glassy hats, and one big performable degrade knob that bitcrushes the whole kit.
+The FM GRIME percussion synth as a DAW instrument (Ableton Live etc.).
+Same DSP core as the Teensy firmware and the VCV Rack plugin
+(`src/grime_dsp.h` is a snapshot of `../firmware/grime_dsp.h` — keep in sync),
+re-controlled for the DAW.
 
-## Status
+## Playing it
 
-Design phase. Voice architecture and panel layout are locked; firmware and hardware are next.
+- **MIDI notes trigger the voices** (GM-style drum map):
+  - C1 (36) — Kick · D1 (38) / E1 (40) — Snare · F#1 (42) — Hat closed
+  - A#1 (46) — Hat open · A1 (45) — Perc · D#1 (39) — Wild
+- The trigger note **transposes** the voice relative to its root note, so the
+  perc and wild voices play melodically from the keyboard.
+- **Velocity** sets the hit level.
+- All 28 parameters are automatable: 18 voice knobs (pitch/decay/character),
+  FM Drive, Noise, Master, Degrade, and 6 mutes.
+- **Outputs** (multi-out): stereo Main (post-degrade) + 6 mono voice buses
+  (pre-degrade). In Ableton, route them to separate tracks.
+- Custom GUI: dark instrument panel — 6 voice strips (pitch/decay/char knobs
+  + mute buttons that glow with trigger activity, like the hardware) and a
+  global strip (drive, noise, master, big degrade knob). All knobs are
+  automatable.
 
-## The module
+## Build
 
-- **32HP, 3U** Eurorack drum synthesizer, Teensy 4.1 based
-- **6 fixed-architecture FM voices** — kick, snare, closed hat, open hat, perc, wild — 100% FM, no samples, no noise generator
-- **Per voice:** trigger in, pitch / decay / character knobs, mute button, red activity LED, individual out (pre-degrade)
-- **Global:** FM drive, noise, master, one big **DEGRADE** knob (stepped bitcrush into sample-rate crush) with CV in, crushed main out
-- **Audio:** CS42448 codec over TDM — 8 DAC channels (6 individual + main + 1 spare)
-- **Panel:** minimal Grayscale-style, matte light gray
+Requires CMake 3.22+, a C++ compiler, and (first time only) ~100MB for JUCE.
 
-See [docs/DESIGN.md](docs/DESIGN.md) for the full design record and [panel/](panel/) for the panel draft.
+```sh
+# macOS (Xcode) / Windows (VS2022) / Linux — builds VST3.
+# Add -DFORMATS="VST3 AU" on macOS for Audio Units.
+cmake -B build
+cmake --build build --config Release
+```
 
-## Repo layout
+The build fetches JUCE 8.0.6 automatically (or point `JUCE_DIR` at a local
+checkout and pass `-DFMGRIME_FETCH_JUCE=OFF`).
 
-- `README.md` — this file
-- `docs/DESIGN.md` — voice architecture, panel, hardware decisions
-- `panel/` — panel renders and drawing script
-- `.gitignore` — build artifacts, IDE files
+Install the resulting `.vst3` bundle into your plugin folder and rescan
+in your DAW.
