@@ -8,9 +8,17 @@
 
 namespace grime {
 
-inline float clampf(float x, float a, float b) { return x < a ? a : (x > b ? b : x); }
+// Runtime sample rate. Rack runs at 44.1/48/96k depending on the engine;
+// the firmware runs at a fixed 44.1k. Set once before use via setSampleRate().
+inline float &sampleRateRef() {
+  static float sr = 44100.0f;
+  return sr;
+}
+inline void setSampleRate(float sr) { sampleRateRef() = sr; }
+inline float SR() { return sampleRateRef(); }
+static constexpr float DEFAULT_SR = 44100.0f;
 
-static constexpr float FS = 44100.0f;
+inline float clampf(float x, float a, float b) { return x < a ? a : (x > b ? b : x); }
 
 // ---------------------------------------------------------------- sine LUT
 static constexpr int LUT_N = 2048;
@@ -42,7 +50,7 @@ inline float wavefold(float x) {
 // exponential decay coefficient: envelope reaches -60dB after `seconds`
 inline float decayCoef(float seconds) {
   if (seconds < 0.0005f) seconds = 0.0005f;
-  return powf(0.001f, 1.0f / (seconds * FS));
+  return powf(0.001f, 1.0f / (seconds * SR()));
 }
 
 // exponential knob mapping
@@ -66,6 +74,7 @@ struct VoiceParams {
   float charCV = 0.0f;    // 0..1  (0–5V adds to character)
   bool hasPitchCV = false, hasDecayCV = false, hasCharCV = false;
   bool muted = false;
+  float transposeMult = 1.0f;  // DAW: MIDI note transpose multiplier (default: none)
 };
 
 struct GlobalParams {
@@ -113,8 +122,8 @@ inline void computeCoefs(VoiceType t, VoiceState &s, const VoiceParams &p) {
 inline float voiceBaseFreq(VoiceType t, const VoiceParams &p) {
   float f;
   switch (t) {
-    case KICK:  f = expMap(p.pitchKnob, 40.0f, 150.0f); break;
-    case SNARE: f = expMap(p.pitchKnob, 150.0f, 380.0f); break;
+    case KICK:  f = expMap(p.pitchKnob, 32.0f, 150.0f); break;   // low end → ~B1 thump
+    case SNARE: f = expMap(p.pitchKnob, 62.0f, 380.0f); break;   // starts ~B1 like the kick
     case HATCL:
     case HATOP: f = expMap(p.pitchKnob, 500.0f, 1400.0f); break;
     case PERC:  f = expMap(p.pitchKnob, 80.0f, 1200.0f); break;
@@ -125,6 +134,7 @@ inline float voiceBaseFreq(VoiceType t, const VoiceParams &p) {
     float semis = p.pitchCV * 5.0f * 12.0f;  // 0–5V → 0–60 semitones
     f *= powf(2.0f, semis / 12.0f);
   }
+  f *= p.transposeMult;
   return clampf(f, 15.0f, 5000.0f);
 }
 
@@ -161,9 +171,9 @@ inline float renderVoice(VoiceType t, VoiceState &s, const VoiceParams &p,
       float f = base * (1.0f + 2.5f * s.envAux);
       float idx = (1.5f + 9.0f * ce) * s.envB;              // hot at attack = click
       float m = fastSin(s.phaseM + g.noise * 0.25f * s.noisePrev);
-      s.phaseM += f / FS; s.noisePrev = m;
+      s.phaseM += f / SR(); s.noisePrev = m;
       float c = fastSin(s.phaseC + idx * m);
-      s.phaseC += f / FS;
+      s.phaseC += f / SR();
       y = wavefold(c * (1.0f + 5.0f * ce)) * 0.9f;
       s.envAux *= s.coefAux; s.envB *= s.coefB;
       break;
@@ -171,13 +181,13 @@ inline float renderVoice(VoiceType t, VoiceState &s, const VoiceParams &p,
     case SNARE: {
       float bodyF = voiceBaseFreq(t, p);
       float mB = fastSin(s.phaseM);
-      s.phaseM += bodyF * 1.5f / FS;
+      s.phaseM += bodyF * 1.5f / SR();
       float body = fastSin(s.phaseC + (2.0f + 5.0f * ce) * mB);
-      s.phaseC += bodyF / FS;
+      s.phaseC += bodyF / SR();
       // FM-feedback noise burst: genuine noise spectra from pure FM
       float fbAmt = 2.5f + 2.0f * g.noise;
       float n = fastSin(s.phaseN + fbAmt * s.noisePrev);
-      s.phaseN += 2800.0f / FS; s.noisePrev = n;
+      s.phaseN += 2800.0f / SR(); s.noisePrev = n;
       float burstAmt = (0.25f + 0.9f * ce) * (0.4f + 0.8f * g.noise);
       y = wavefold((body * 0.75f + n * s.envAux * burstAmt) * (1.0f + 2.0f * ce)) * 0.8f;
       s.envAux *= s.coefAux;
@@ -187,19 +197,19 @@ inline float renderVoice(VoiceType t, VoiceState &s, const VoiceParams &p,
     case HATOP: {
       float base = voiceBaseFreq(t, p);
       float m = fastSin(s.phaseM + g.noise * 0.8f * s.noisePrev);
-      s.phaseM += base * 2.76f / FS;  // inharmonic ratio → metallic
+      s.phaseM += base * 2.76f / SR();  // inharmonic ratio → metallic
       s.noisePrev = m;
       float c = fastSin(s.phaseC + (2.5f + 6.0f * ce) * m);
-      s.phaseC += base / FS;
+      s.phaseC += base / SR();
       y = c * 0.5f;
       break;
     }
     case PERC: {
       float base = voiceBaseFreq(t, p);
       float m = fastSin(s.phaseM + g.noise * 0.4f * s.noisePrev);
-      s.phaseM += base / FS; s.noisePrev = m;
+      s.phaseM += base / SR(); s.noisePrev = m;
       float c = fastSin(s.phaseC + (0.5f + 8.0f * ce) * m);  // woody → glassy
-      s.phaseC += base / FS;
+      s.phaseC += base / SR();
       y = wavefold(c * (1.0f + 1.5f * ce)) * 0.7f;
       break;
     }
@@ -209,9 +219,9 @@ inline float renderVoice(VoiceType t, VoiceState &s, const VoiceParams &p,
       float f = f0 * powf(2.0f, (0.5f + 3.5f * ce) * sw) * s.detune;
       float ratio = 1.0f + ce * 7.0f * sw;                    // ratio chaos
       float m = fastSin(s.phaseM + g.noise * 0.5f * s.noisePrev);
-      s.phaseM += f * ratio / FS; s.noisePrev = m;
+      s.phaseM += f * ratio / SR(); s.noisePrev = m;
       float c = fastSin(s.phaseC + (1.0f + 7.0f * ce) * (0.3f + 0.7f * sw) * m);
-      s.phaseC += f / FS;
+      s.phaseC += f / SR();
       y = wavefold(c * (1.0f + 2.0f * ce)) * 0.7f;
       s.envAux *= s.coefAux;
       break;
@@ -231,7 +241,9 @@ struct DegradeState {
 };
 
 inline float degradeSample(float x, float knob01, float cv01, DegradeState &st) {
-  float d = clampf(knob01 + 0.5f * cv01, 0.0f, 1.0f);  // fixed CV depth
+  // 2026-10-08 ear test: only the 0–0.35 zone is musical, so the full sweep
+  // now spans that zone (bit ladder 16→4 across the knob, no SR mush).
+  float d = clampf((knob01 + 0.5f * cv01) * 0.35f, 0.0f, 1.0f);
   static const int ladder[7] = {16, 12, 8, 6, 4, 2, 1};
   int bits;
   if (d <= 0.5f) {

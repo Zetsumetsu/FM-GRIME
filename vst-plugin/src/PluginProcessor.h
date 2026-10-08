@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <atomic>
 #include "grime_dsp.h"
 
 // FM GRIME for DAWs (VST3) — same DSP core as the Teensy firmware and the
@@ -20,8 +21,8 @@ public:
     void releaseResources() override {}
     void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
 
-    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
-    bool hasEditor() const override { return false; }
+    juce::AudioProcessorEditor* createEditor() override;
+    bool hasEditor() const override { return true; }
 
     const juce::String getName() const override { return "FM GRIME"; }
     bool acceptsMidi() const override { return true; }
@@ -43,6 +44,9 @@ public:
     juce::AudioProcessorValueTreeState apvts;
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    // per-voice trigger activity (1 on trigger, decays) — drives the editor LEDs
+    std::atomic<float> voiceActivity[6];
+
 private:
     // MIDI drum map: note -> voice (order: kick, snare, hatCL, hatOP, perc, wild)
     static int noteToVoice(int midiNote);
@@ -57,6 +61,7 @@ private:
     float velLevel[6] = {1.f, 1.f, 1.f, 1.f, 1.f, 1.f};
     float lastDecayK[6];
     bool coefsDirty = true;
+    double lastSampleRate = 44100.0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FmGrimeProcessor)
 };

@@ -123,8 +123,8 @@ inline void computeCoefs(VoiceType t, VoiceState &s, const VoiceParams &p) {
 inline float voiceBaseFreq(VoiceType t, const VoiceParams &p) {
   float f;
   switch (t) {
-    case KICK:  f = expMap(p.pitchKnob, 40.0f, 150.0f); break;
-    case SNARE: f = expMap(p.pitchKnob, 150.0f, 380.0f); break;
+    case KICK:  f = expMap(p.pitchKnob, 32.0f, 150.0f); break;   // low end → ~B1 thump
+    case SNARE: f = expMap(p.pitchKnob, 62.0f, 380.0f); break;   // starts ~B1 like the kick
     case HATCL:
     case HATOP: f = expMap(p.pitchKnob, 500.0f, 1400.0f); break;
     case PERC:  f = expMap(p.pitchKnob, 80.0f, 1200.0f); break;
@@ -242,7 +242,9 @@ struct DegradeState {
 };
 
 inline float degradeSample(float x, float knob01, float cv01, DegradeState &st) {
-  float d = clampf(knob01 + 0.5f * cv01, 0.0f, 1.0f);  // fixed CV depth
+  // 2026-10-08 ear test: only the 0–0.35 zone is musical, so the full sweep
+  // now spans that zone (bit ladder 16→4 across the knob, no SR mush).
+  float d = clampf((knob01 + 0.5f * cv01) * 0.35f, 0.0f, 1.0f);
   static const int ladder[7] = {16, 12, 8, 6, 4, 2, 1};
   int bits;
   if (d <= 0.5f) {

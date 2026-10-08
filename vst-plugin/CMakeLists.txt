@@ -32,7 +32,7 @@ juce_add_plugin(FmGrimeVST
     # Add AU on macOS builds: FORMATS VST3 AU
 )
 
-target_sources(FmGrimeVST PRIVATE src/PluginProcessor.cpp)
+target_sources(FmGrimeVST PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp)
 
 target_compile_definitions(FmGrimeVST PUBLIC
     JUCE_WEB_BROWSER=0

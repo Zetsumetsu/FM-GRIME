@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "PluginEditor.h"
 
 // sine LUT storage (declared extern in grime_dsp.h)
 float grime::sinLUT[grime::LUT_N + 1];
@@ -67,7 +68,12 @@ FmGrimeProcessor::FmGrimeProcessor()
 
 void FmGrimeProcessor::prepareToPlay(double sampleRate, int) {
     grime::setSampleRate((float) sampleRate);
+    lastSampleRate = sampleRate;
     coefsDirty = true;
+}
+
+juce::AudioProcessorEditor* FmGrimeProcessor::createEditor() {
+    return new PluginEditor(*this);
 }
 
 bool FmGrimeProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
@@ -83,6 +89,7 @@ void FmGrimeProcessor::triggerVoice(int v, int midiNote, float velocity) {
     if (vp[v].muted) return;
     vp[v].transposeMult = std::pow(2.f, (midiNote - voiceRootNote(v)) / 12.f);
     velLevel[v] = 0.25f + 0.75f * velocity;
+    voiceActivity[v].store(1.0f);
     grime::triggerVoice((grime::VoiceType) v, vs[v], vp[v], gp, seed);
     if (v == grime::HATCL) vs[grime::HATOP].envAmp = 0.f;  // choke pair
     if (v == grime::HATOP) vs[grime::HATCL].envAmp = 0.f;
@@ -148,6 +155,11 @@ void FmGrimeProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
         mainL[n] = m;
         mainR[n] = m;
     }
+
+    // decay the activity LEDs (~120 ms fall)
+    float actMul = std::pow(0.5f, (float) numSamples / (float) (lastSampleRate * 0.12));
+    for (int i = 0; i < 6; i++)
+        voiceActivity[i].store(voiceActivity[i].load() * actMul);
 }
 
 void FmGrimeProcessor::getStateInformation(juce::MemoryBlock& destData) {

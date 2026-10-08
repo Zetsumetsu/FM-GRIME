@@ -17,7 +17,10 @@ re-controlled for the DAW.
   FM Drive, Noise, Master, Degrade, and 6 mutes.
 - **Outputs** (multi-out): stereo Main (post-degrade) + 6 mono voice buses
   (pre-degrade). In Ableton, route them to separate tracks.
-- v0.1 uses the host's generic parameter UI — a custom GUI is a later step.
+- Custom GUI: dark instrument panel — 6 voice strips (pitch/decay/char knobs
+  + mute buttons that glow with trigger activity, like the hardware) and a
+  global strip (drive, noise, master, big degrade knob). All knobs are
+  automatable.
 
 ## Build
 
