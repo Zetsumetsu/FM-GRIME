@@ -228,11 +228,21 @@ void PluginEditor::paint(juce::Graphics& g) {
     g.setColour(GuiLab::ACCENT.withAlpha(0.55f));
     g.fillRect(gb.getX() + 10.0f, gb.getY(), gb.getWidth() - 20.0f, 2.0f);
 
-    // title banner, left-justified (flat text fallback if artwork missing)
+    // title banner, centered (flat text fallback if artwork missing)
     if (titleImage.isValid()) {
-        g.drawImage(titleImage,
-                    juce::Rectangle<float>((float) GuiLab::TITLE_X, (float) GuiLab::TITLE_Y,
-                                           (float) GuiLab::TITLE_W, (float) GuiLab::TITLE_H));
+        // logo dance: swell + jitter with the kick, flash with its HF energy
+        float sc = 1.0f + (GuiLab::USE_LOGO_DANCE ? GuiLab::LOGO_PULSE * logoKick : 0.0f);
+        float cx = GuiLab::TITLE_X + GuiLab::TITLE_W * 0.5f + logoJx;
+        float cy = GuiLab::TITLE_Y + GuiLab::TITLE_H * 0.5f + logoJy;
+        juce::Rectangle<float> tr(cx - GuiLab::TITLE_W * sc * 0.5f,
+                                  cy - GuiLab::TITLE_H * sc * 0.5f,
+                                  GuiLab::TITLE_W * sc, GuiLab::TITLE_H * sc);
+        g.drawImage(titleImage, tr);
+        if (GuiLab::USE_LOGO_DANCE && logoHf > 0.02f) {
+            // illuminate: neon silhouette masked by the logo's alpha
+            g.setColour(GuiLab::ACCENT.withAlpha(logoHf * GuiLab::LOGO_FLASH));
+            g.drawImage(titleImage, tr, juce::RectanglePlacement::centred, true);
+        }
     } else {
         g.setColour(GuiLab::ACCENT);
         g.setFont(juce::Font(30.0f, juce::Font::bold));
@@ -269,4 +279,11 @@ void PluginEditor::resized() {
 void PluginEditor::timerCallback() {
     for (int i = 0; i < 6; i++)
         strips[i]->setActivity(proc.voiceActivity[i].load());
+    if (GuiLab::USE_LOGO_DANCE) {
+        logoKick = proc.voiceActivity[0].load();
+        logoHf = proc.kickHfActivity.load();
+        logoJx = (logoRand.nextFloat() - 0.5f) * GuiLab::LOGO_JITTER * logoKick;
+        logoJy = (logoRand.nextFloat() - 0.5f) * GuiLab::LOGO_JITTER * logoKick;
+        repaint();
+    }
 }

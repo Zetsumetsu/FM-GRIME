@@ -141,11 +141,22 @@ void FmGrimeProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
     for (int i = 0; i < 6; i++)
         voiceOut[i] = getBusBuffer(buffer, false, i + 1).getWritePointer(0);
 
+    // kick HF meter decay (~80 ms fall), applied per-sample in the loop below
+    const float hfDec = std::pow(0.5f, 1.0f / (float) (lastSampleRate * 0.08));
+
     for (int n = 0; n < numSamples; ++n) {
         float mix = 0.f;
         for (int i = 0; i < 6; i++) {
             float s = vp[i].muted ? 0.f
                       : grime::renderVoice((grime::VoiceType) i, vs[i], vp[i], gp) * velLevel[i];
+            if (i == 0) {
+                // logo meter: HF energy of the kick (differentiator ~= highpass
+                // + peak envelope). Read-only tap — the audio path is untouched.
+                float hp = s - kickHpPrev;
+                kickHpPrev = s;
+                float a = std::abs(hp);
+                kickHfEnv = a > kickHfEnv ? a : kickHfEnv * hfDec;
+            }
             voiceOut[i][n] = s;
             mix += s;
         }
@@ -160,6 +171,10 @@ void FmGrimeProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Midi
     float actMul = std::pow(0.5f, (float) numSamples / (float) (lastSampleRate * 0.12));
     for (int i = 0; i < 6; i++)
         voiceActivity[i].store(voiceActivity[i].load() * actMul);
+
+    // publish the kick HF meter for the logo flash (gain tuned so a hard
+    // kick transient reads near 1; purely a GUI value)
+    kickHfActivity.store(juce::jmin(kickHfEnv * 6.0f, 1.0f));
 }
 
 void FmGrimeProcessor::getStateInformation(juce::MemoryBlock& destData) {

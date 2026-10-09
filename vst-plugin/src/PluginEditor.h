@@ -47,6 +47,12 @@ namespace GuiLab {
     constexpr int GLOBAL_KNOB_D = 58; // global small knob diameter
     constexpr int BIG_KNOB_D  = 76;   // degrade knob diameter
 
+    // ---- logo dance (audio-reactive header) ----
+    constexpr bool  USE_LOGO_DANCE = true;  // kick pulse + jitter + HF flash
+    constexpr float LOGO_PULSE  = 0.06f;    // logo scale-up on kick hit
+    constexpr float LOGO_JITTER = 6.0f;     // px of jitter on kick hit
+    constexpr float LOGO_FLASH  = 0.55f;    // HF illumination strength
+
     // ---- crash-bisect switches ----
     constexpr bool USE_CUSTOM_KNOBS = true;  // custom knob rendering
     constexpr bool USE_ACTIVITY_TIMER = true; // 30 Hz LED flash timer
@@ -110,4 +116,8 @@ private:
     juce::Label driveLabel, noiseLabel, masterLabel, degradeLabel;
     juce::Slider driveKnob, noiseKnob, masterKnob, degradeKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> aDrive, aNoise, aMaster, aDegrade;
+
+    // logo dance state (updated by the activity timer)
+    float logoKick = 0.f, logoHf = 0.f, logoJx = 0.f, logoJy = 0.f;
+    juce::Random logoRand;
 };

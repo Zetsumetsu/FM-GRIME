@@ -46,6 +46,8 @@ public:
 
     // per-voice trigger activity (1 on trigger, decays) — drives the editor LEDs
     std::atomic<float> voiceActivity[6];
+    // kick HF energy (0..1) — GUI-only meter for the logo flash; audio untouched
+    std::atomic<float> kickHfActivity{0.0f};
 
 private:
     // MIDI drum map: note -> voice (order: kick, snare, hatCL, hatOP, perc, wild)
@@ -62,6 +64,8 @@ private:
     float lastDecayK[6];
     bool coefsDirty = true;
     double lastSampleRate = 44100.0;
+    float kickHfEnv = 0.f;   // HF envelope state (logo meter only)
+    float kickHpPrev = 0.f;  // differentiator state (logo meter only)
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FmGrimeProcessor)
 };
