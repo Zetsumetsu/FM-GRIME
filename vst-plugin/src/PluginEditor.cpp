@@ -160,8 +160,8 @@ PluginEditor::PluginEditor(FmGrimeProcessor& p)
     // thread — no background threads, no async callbacks (crash-safety).
     bgImage = juce::ImageCache::getFromMemory(BinaryData::slime_bg_jpg,
                                               BinaryData::slime_bg_jpgSize);
-    titleImage = juce::ImageCache::getFromMemory(BinaryData::grime_title_jpg,
-                                                 BinaryData::grime_title_jpgSize);
+    titleImage = juce::ImageCache::getFromMemory(BinaryData::grime_title_png,
+                                                 BinaryData::grime_title_pngSize);
 
     globalLabel.setText("GLOBAL", juce::dontSendNotification);
     globalLabel.setJustificationType(juce::Justification::centred);

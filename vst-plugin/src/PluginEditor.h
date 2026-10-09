@@ -26,11 +26,11 @@ namespace GuiLab {
     inline const juce::Colour DIM     = juce::Colour(0xff9db89d); // dim labels
     inline const juce::Colour BG_DIM  = juce::Colour(0x3c000000); // dim over bg image
 
-    // ---- title banner (grime_title.jpg, drawn at top-left) ----
-    constexpr int TITLE_X = 16;
-    constexpr int TITLE_Y = 10;
+    // ---- title banner (grime_title.png, white keyed out, centered) ----
     constexpr int TITLE_W = 380;
-    constexpr int TITLE_H = 166;
+    constexpr int TITLE_H = 126;
+    constexpr int TITLE_X = (WIN_W - TITLE_W) / 2;  // centered; change to 16 for left
+    constexpr int TITLE_Y = 10;
 
     // ---- layout ----
     constexpr int STRIP_X0    = 10;   // first strip left edge
