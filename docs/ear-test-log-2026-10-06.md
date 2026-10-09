@@ -91,3 +91,12 @@ from it).
 - **GUI:** custom editor built — dark instrument panel, 6 voice strips with
   knobs + glowing mute/activity buttons, global strip with big degrade knob.
   All 28 params still automatable.
+
+## 2026-10-08 — GUI crash fix
+
+Ableton crashed on editor open (then on plugin load/scan): `setSize()` was
+called at the top of the editor constructor, which fires `resized()`
+synchronously while the voice strips were still null -> segfault. Fixed by
+creating all components first and calling `setSize()` last. Also initialized
+the voice-activity atoms to 0. Verified with a headless editor open + full
+offscreen paint test (AddressSanitizer clean).

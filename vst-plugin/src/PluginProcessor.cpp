@@ -63,7 +63,7 @@ FmGrimeProcessor::FmGrimeProcessor()
                          .withOutput("Wild", juce::AudioChannelSet::mono(), true)),
       apvts(*this, nullptr, "FMGRIME", createParameterLayout()) {
     grime::initLUT();
-    for (int i = 0; i < 6; i++) lastDecayK[i] = -1.f;
+    for (int i = 0; i < 6; i++) { lastDecayK[i] = -1.f; voiceActivity[i].store(0.f); }
 }
 
 void FmGrimeProcessor::prepareToPlay(double sampleRate, int) {

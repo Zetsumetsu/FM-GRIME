@@ -22,7 +22,9 @@ public:
     void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
 
     juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override { return true; }
+    // GUI temporarily disabled (2026-10-08): the custom editor crashed Ableton
+    // on Windows even after the ctor fix; tuning + DSP verified working.
+    bool hasEditor() const override { return false; }
 
     const juce::String getName() const override { return "FM GRIME"; }
     bool acceptsMidi() const override { return true; }

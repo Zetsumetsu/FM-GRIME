@@ -143,8 +143,6 @@ void PluginEditor::setupKnob(juce::Slider& s, GrimeLookAndFeel& lnf,
 
 PluginEditor::PluginEditor(FmGrimeProcessor& p)
     : juce::AudioProcessorEditor(p), proc(p) {
-    setSize(1020, 470);
-
     titleLabel.setText("FM GRIME", juce::dontSendNotification);
     titleLabel.setJustificationType(juce::Justification::centredLeft);
     titleLabel.setColour(juce::Label::textColourId, kText);
@@ -184,6 +182,7 @@ PluginEditor::PluginEditor(FmGrimeProcessor& p)
     aDegrade = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         proc.apvts, "degrade", degradeKnob);
 
+    setSize(1020, 470);  // last: triggers resized(), strips must exist first
     startTimerHz(30);
 }
 

@@ -7,10 +7,14 @@
 
 int main(int argc, char** argv) {
     if (argc < 2) { std::printf("usage: smoke_test <path-to-.vst3>\n"); return 2; }
+    juce::ScopedJuceInitialiser_GUI guiInit;
+    std::printf("DBG: gui init done\n"); fflush(stdout);
 
     juce::VST3PluginFormat format;
     juce::OwnedArray<juce::PluginDescription> descs;
+    std::printf("DBG: before findAllTypesForFile\n"); fflush(stdout);
     format.findAllTypesForFile(descs, argv[1]);
+    std::printf("DBG: after findAllTypesForFile\n"); fflush(stdout);
     if (descs.isEmpty()) { std::printf("FAIL: no plugin found in bundle\n"); return 1; }
 
     juce::String err;
@@ -63,5 +67,30 @@ int main(int argc, char** argv) {
     ok &= tail < 0.01f;
 
     std::printf(ok ? "SMOKE TEST PASS\n" : "SMOKE TEST FAIL\n");
-    return ok ? 0 : 1;
+    if (!ok) return 1;
+
+    // ---- phase 2: editor ----
+    std::printf("hasEditor: %d\n", (int) inst->hasEditor());
+    if (inst->hasEditor()) {
+        std::unique_ptr<juce::AudioProcessorEditor> ed(inst->createEditor());
+        if (!ed) { std::printf("FAIL: createEditor returned null\n"); return 1; }
+        std::printf("editor created: %d x %d\n", ed->getWidth(), ed->getHeight());
+        juce::Image img(juce::Image::ARGB, ed->getWidth(), ed->getHeight(), true);
+        {
+            juce::Graphics g(img);
+            ed->paintEntireComponent(g, false);
+        }
+        std::printf("editor painted OK\n");
+        // poke a knob through the APVTS to exercise attachments
+        if (auto* p = inst->getParameters()[0])
+            p->setValueNotifyingHost(0.75f);
+        {
+            juce::Graphics g(img);
+            ed->paintEntireComponent(g, false);
+        }
+        std::printf("editor repaint after param change OK\n");
+    }
+
+    std::printf("ALL PASS\n");
+    return 0;
 }
