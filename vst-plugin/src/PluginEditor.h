@@ -14,26 +14,38 @@
 namespace GuiLab {
     // ---- window ----
     constexpr int WIN_W = 1020;
-    constexpr int WIN_H = 470;
+    constexpr int WIN_H = 560;
 
     // ---- colors ----
-    inline const juce::Colour BG     = juce::Colour(0xff111111); // main background
-    inline const juce::Colour STRIP  = juce::Colour(0xff1a1a1a); // voice strip panel
-    inline const juce::Colour KNOB   = juce::Colour(0xff2b2b2b); // knob body
-    inline const juce::Colour ACCENT = juce::Colour(0xffff3b1f); // red-orange accent
-    inline const juce::Colour TEXT   = juce::Colour(0xffd8d8d8); // main text
-    inline const juce::Colour DIM    = juce::Colour(0xff8a8a8a); // dim labels
+    inline const juce::Colour ACCENT  = juce::Colour(0xff39ff14); // neon green
+    inline const juce::Colour HIT     = juce::Colour(0xffff2a1a); // hit flash red
+    inline const juce::Colour MUTE_BG = juce::Colour(0xff5a1408); // muted dark red
+    inline const juce::Colour STRIP   = juce::Colour(0x73142c17); // dark forest green, ~45%
+    inline const juce::Colour KNOB    = juce::Colour(0xff1e2b1e); // knob body
+    inline const juce::Colour TEXT    = juce::Colour(0xffe9f2e9); // main text
+    inline const juce::Colour DIM     = juce::Colour(0xff9db89d); // dim labels
+    inline const juce::Colour BG_DIM  = juce::Colour(0x3c000000); // dim over bg image
+
+    // ---- title banner (grime_title.jpg, drawn at top-left) ----
+    constexpr int TITLE_X = 16;
+    constexpr int TITLE_Y = 10;
+    constexpr int TITLE_W = 380;
+    constexpr int TITLE_H = 166;
 
     // ---- layout ----
     constexpr int STRIP_X0    = 10;   // first strip left edge
-    constexpr int STRIP_Y     = 60;   // strip top edge
+    constexpr int STRIP_Y     = 192;  // strip top edge
     constexpr int STRIP_PITCH = 130;  // horizontal distance between strips
     constexpr int STRIP_W     = 124;  // strip width
-    constexpr int STRIP_H     = 396;  // strip height
+    constexpr int STRIP_H     = 356;  // strip height
+    constexpr int NAME_H      = 24;   // channel name height
+    constexpr int NAME_GAP    = 14;   // breathing room under channel name
     constexpr int KNOB_D      = 64;   // voice knob diameter
-    constexpr int BIG_KNOB_D  = 88;   // degrade knob diameter
+    constexpr int KNOB_ROW_H  = 78;   // knob + label row height
     constexpr int GLOBAL_X    = 806;  // global panel left edge
     constexpr int GLOBAL_W    = 204;  // global panel width
+    constexpr int GLOBAL_KNOB_D = 58; // global small knob diameter
+    constexpr int BIG_KNOB_D  = 76;   // degrade knob diameter
 
     // ---- crash-bisect switches ----
     constexpr bool USE_CUSTOM_KNOBS = true;  // custom knob rendering
@@ -41,7 +53,8 @@ namespace GuiLab {
     constexpr bool USE_FANCY_MUTE   = true;  // rounded + glowing mute buttons
 }
 
-// Dark instrument look: charcoal panels, red-orange accents, glowing mutes.
+// Slime-wall instrument look: dripping neon-green grime over dark forest
+// columns, glowing knob arcs, red hit-flash mutes.
 
 class GrimeLookAndFeel : public juce::LookAndFeel_V4 {
 public:
@@ -51,7 +64,7 @@ public:
 };
 
 // Mute button doubling as the voice activity LED (mirrors the hardware:
-// dark at rest, flashes with the trigger; dim red while muted).
+// dark at rest, flashes red with the trigger; dark red while muted).
 class MuteButton : public juce::ToggleButton {
 public:
     std::atomic<float> activity{0.0f};
@@ -90,7 +103,8 @@ private:
 
     FmGrimeProcessor& proc;
     GrimeLookAndFeel lnf;
-    juce::Label titleLabel, globalLabel;
+    juce::Image bgImage, titleImage;
+    juce::Label globalLabel;
     std::unique_ptr<VoiceStrip> strips[6];
 
     juce::Label driveLabel, noiseLabel, masterLabel, degradeLabel;

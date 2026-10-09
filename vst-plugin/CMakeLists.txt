@@ -34,12 +34,19 @@ juce_add_plugin(FmGrimeVST
 
 target_sources(FmGrimeVST PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp)
 
+# Embedded GUI artwork (slime background + title banner) via JUCE BinaryData.
+# BinaryData.h exposes BinaryData::slime_bg_jpg / grime_title_jpg (+Size).
+juce_add_binary_data(FmGrimeAssets SOURCES
+    assets/slime_bg.jpg
+    assets/grime_title.jpg)
+
 target_compile_definitions(FmGrimeVST PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0)
 
 target_link_libraries(FmGrimeVST PRIVATE
+    FmGrimeAssets
     juce::juce_audio_utils
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags)
