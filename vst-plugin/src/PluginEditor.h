@@ -14,7 +14,7 @@
 namespace GuiLab {
     // ---- window ----
     constexpr int WIN_W = 1020;
-    constexpr int WIN_H = 560;
+    constexpr int WIN_H = 600;
 
     // ---- colors ----
     inline const juce::Colour ACCENT  = juce::Colour(0xff39ff14); // neon green
@@ -27,14 +27,14 @@ namespace GuiLab {
     inline const juce::Colour BG_DIM  = juce::Colour(0x3c000000); // dim over bg image
 
     // ---- title banner (grime_title.png, white keyed out, centered) ----
-    constexpr int TITLE_W = 380;
-    constexpr int TITLE_H = 126;
+    constexpr int TITLE_W = 665;   // 1.75x
+    constexpr int TITLE_H = 221;
     constexpr int TITLE_X = (WIN_W - TITLE_W) / 2;  // centered; change to 16 for left
     constexpr int TITLE_Y = 10;
 
     // ---- layout ----
     constexpr int STRIP_X0    = 10;   // first strip left edge
-    constexpr int STRIP_Y     = 192;  // strip top edge
+    constexpr int STRIP_Y     = 232;  // strip top edge
     constexpr int STRIP_PITCH = 130;  // horizontal distance between strips
     constexpr int STRIP_W     = 124;  // strip width
     constexpr int STRIP_H     = 356;  // strip height
