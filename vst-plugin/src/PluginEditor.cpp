@@ -2,13 +2,6 @@
 
 namespace {
 constexpr float kPi = 3.14159265358979323846f;
-const juce::Colour kBg(0xff111111);
-const juce::Colour kStrip(0xff1a1a1a);
-const juce::Colour kKnob(0xff2b2b2b);
-const juce::Colour kKnobEdge(0xff454545);
-const juce::Colour kAccent(0xffff3b1f);
-const juce::Colour kText(0xffd8d8d8);
-const juce::Colour kDim(0xff8a8a8a);
 
 const char* kVoiceNames[6] = {"KICK", "SNARE", "HAT CL", "HAT OP", "PERC", "WILD"};
 const char* kVoiceIds[6] = {"kick", "snare", "hatcl", "hatop", "perc", "wild"};
@@ -24,9 +17,9 @@ void GrimeLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int wid
     float radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.5f;
     auto centre = bounds.getCentre();
 
-    g.setColour(kKnob);
+    g.setColour(GuiLab::KNOB);
     g.fillEllipse(centre.x - radius, centre.y - radius, radius * 2.0f, radius * 2.0f);
-    g.setColour(kKnobEdge);
+    g.setColour(GuiLab::DIM);
     g.drawEllipse(centre.x - radius, centre.y - radius, radius * 2.0f, radius * 2.0f, 1.5f);
 
     float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
@@ -35,7 +28,7 @@ void GrimeLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int wid
         juce::Path arc;
         arc.addArc(centre.x - arcR, centre.y - arcR, arcR * 2.0f, arcR * 2.0f,
                    rotaryStartAngle, angle, true);
-        g.setColour(kAccent);
+        g.setColour(GuiLab::ACCENT);
         g.strokePath(arc, juce::PathStrokeType(3.0f));
     }
 
@@ -51,19 +44,31 @@ void GrimeLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int wid
 // ---- MuteButton ----
 
 void MuteButton::paint(juce::Graphics& g) {
-    auto b = getLocalBounds().toFloat().reduced(2.0f);
-    float act = juce::jmin(1.0f, activity.load());
+    auto b = getLocalBounds().toFloat();
     bool muted = getToggleState();
+
+    if (!GuiLab::USE_FANCY_MUTE) {
+        // minimal fallback: flat rect, no rounded corners or alpha blending
+        g.setColour(muted ? juce::Colours::darkred : juce::Colours::darkgrey);
+        g.fillRect(b);
+        g.setColour(juce::Colours::white);
+        g.setFont(12.0f);
+        g.drawText(muted ? "MUTED" : "MUTE", b, juce::Justification::centred);
+        return;
+    }
+
+    b = b.reduced(2.0f);
+    float act = juce::jmin(1.0f, activity.load());
 
     g.setColour(muted ? juce::Colour(0xff5a1408) : juce::Colour(0xff242424));
     g.fillRoundedRectangle(b, 6.0f);
 
     if (act > 0.01f) {
-        g.setColour(kAccent.withAlpha(act * (muted ? 0.95f : 0.6f)));
+        g.setColour(GuiLab::ACCENT.withAlpha(act * (muted ? 0.95f : 0.6f)));
         g.fillRoundedRectangle(b, 6.0f);
     }
 
-    g.setColour(muted ? juce::Colours::white : kDim);
+    g.setColour(muted ? juce::Colours::white : GuiLab::DIM);
     g.setFont(12.0f);
     g.drawText(muted ? "MUTED" : "MUTE", b, juce::Justification::centred);
 }
@@ -75,10 +80,11 @@ void VoiceStrip::setupKnob(juce::Slider& s, GrimeLookAndFeel& lnf,
     s.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     s.setRotaryParameters(kPi * 1.25f, kPi * 2.75f, true);
     s.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    s.setLookAndFeel(&lnf);
+    if (GuiLab::USE_CUSTOM_KNOBS)
+        s.setLookAndFeel(&lnf);
     label.setText(labelText, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
-    label.setColour(juce::Label::textColourId, kDim);
+    label.setColour(juce::Label::textColourId, GuiLab::DIM);
     label.setFont(11.0f);
 }
 
@@ -89,7 +95,7 @@ VoiceStrip::VoiceStrip(FmGrimeProcessor& proc, int voiceIndex, GrimeLookAndFeel&
 
     nameLabel.setText(kVoiceNames[voiceIndex], juce::dontSendNotification);
     nameLabel.setJustificationType(juce::Justification::centred);
-    nameLabel.setColour(juce::Label::textColourId, kText);
+    nameLabel.setColour(juce::Label::textColourId, GuiLab::TEXT);
     nameLabel.setFont(juce::Font(14.0f, juce::Font::bold));
 
     addAndMakeVisible(pitchKnob);
@@ -134,10 +140,11 @@ void PluginEditor::setupKnob(juce::Slider& s, GrimeLookAndFeel& lnf,
     s.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     s.setRotaryParameters(kPi * 1.25f, kPi * 2.75f, true);
     s.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    s.setLookAndFeel(&lnf);
+    if (GuiLab::USE_CUSTOM_KNOBS)
+        s.setLookAndFeel(&lnf);
     label.setText(labelText, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
-    label.setColour(juce::Label::textColourId, kDim);
+    label.setColour(juce::Label::textColourId, GuiLab::DIM);
     label.setFont(11.0f);
 }
 
@@ -145,13 +152,13 @@ PluginEditor::PluginEditor(FmGrimeProcessor& p)
     : juce::AudioProcessorEditor(p), proc(p) {
     titleLabel.setText("FM GRIME", juce::dontSendNotification);
     titleLabel.setJustificationType(juce::Justification::centredLeft);
-    titleLabel.setColour(juce::Label::textColourId, kText);
+    titleLabel.setColour(juce::Label::textColourId, GuiLab::TEXT);
     titleLabel.setFont(juce::Font(26.0f, juce::Font::bold));
     addAndMakeVisible(titleLabel);
 
     globalLabel.setText("GLOBAL", juce::dontSendNotification);
     globalLabel.setJustificationType(juce::Justification::centred);
-    globalLabel.setColour(juce::Label::textColourId, kText);
+    globalLabel.setColour(juce::Label::textColourId, GuiLab::TEXT);
     globalLabel.setFont(juce::Font(14.0f, juce::Font::bold));
     addAndMakeVisible(globalLabel);
 
@@ -182,41 +189,46 @@ PluginEditor::PluginEditor(FmGrimeProcessor& p)
     aDegrade = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         proc.apvts, "degrade", degradeKnob);
 
-    setSize(1020, 470);  // last: triggers resized(), strips must exist first
-    startTimerHz(30);
+    // LAST: setSize() fires resized() synchronously, so every child
+    // component above must exist before this line runs.
+    setSize(GuiLab::WIN_W, GuiLab::WIN_H);
+    if (GuiLab::USE_ACTIVITY_TIMER)
+        startTimerHz(30);
 }
 
 void PluginEditor::paint(juce::Graphics& g) {
-    g.fillAll(kBg);
+    g.fillAll(GuiLab::BG);
     // strip backgrounds
     for (int i = 0; i < 6; i++) {
         auto b = strips[i]->getBounds().toFloat();
-        g.setColour(kStrip);
+        g.setColour(GuiLab::STRIP);
         g.fillRoundedRectangle(b, 8.0f);
     }
-    auto gb = juce::Rectangle<float>(806, 56, 204, 404);
-    g.setColour(kStrip);
+    auto gb = juce::Rectangle<float>((float) GuiLab::GLOBAL_X, (float) GuiLab::STRIP_Y,
+                                     (float) GuiLab::GLOBAL_W, (float) GuiLab::STRIP_H);
+    g.setColour(GuiLab::STRIP);
     g.fillRoundedRectangle(gb, 8.0f);
     // red rule under title
-    g.setColour(kAccent);
-    g.fillRect(10, 50, 1000, 2);
+    g.setColour(GuiLab::ACCENT);
+    g.fillRect(GuiLab::STRIP_X0, 50, GuiLab::WIN_W - 20, 2);
 }
 
 void PluginEditor::resized() {
     titleLabel.setBounds(16, 8, 300, 36);
     for (int i = 0; i < 6; i++)
-        strips[i]->setBounds(10 + i * 130, 60, 124, 396);
+        strips[i]->setBounds(GuiLab::STRIP_X0 + i * GuiLab::STRIP_PITCH,
+                             GuiLab::STRIP_Y, GuiLab::STRIP_W, GuiLab::STRIP_H);
 
-    int gx = 806;
-    globalLabel.setBounds(gx, 60, 204, 24);
+    int gx = GuiLab::GLOBAL_X;
+    globalLabel.setBounds(gx, 60, GuiLab::GLOBAL_W, 24);
     auto knobRow = [&](juce::Slider& s, juce::Label& l, int y, int size) {
-        s.setBounds(gx + (204 - size) / 2, y, size, size);
-        l.setBounds(gx, y + size, 204, 16);
+        s.setBounds(gx + (GuiLab::GLOBAL_W - size) / 2, y, size, size);
+        l.setBounds(gx, y + size, GuiLab::GLOBAL_W, 16);
     };
-    knobRow(driveKnob, driveLabel, 92, 64);
-    knobRow(noiseKnob, noiseLabel, 176, 64);
-    knobRow(masterKnob, masterLabel, 260, 64);
-    knobRow(degradeKnob, degradeLabel, 344, 88);
+    knobRow(driveKnob, driveLabel, 92, GuiLab::KNOB_D);
+    knobRow(noiseKnob, noiseLabel, 176, GuiLab::KNOB_D);
+    knobRow(masterKnob, masterLabel, 260, GuiLab::KNOB_D);
+    knobRow(degradeKnob, degradeLabel, 344, GuiLab::BIG_KNOB_D);
 }
 
 void PluginEditor::timerCallback() {

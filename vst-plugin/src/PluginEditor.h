@@ -4,6 +4,43 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
 
+// ==================== FM GRIME GUI LAB ====================
+// Tweak these values, push, and CI rebuilds the plugin.
+// Colors are 0xAARRGGBB hex (AA = opacity, then red/green/blue).
+//
+// CRASH BISECT: if Ableton crashes, flip the USE_* switches off ONE at a
+// time (true -> false), push, rebuild, test. The switch that stops the
+// crash tells us exactly which feature Windows hates.
+namespace GuiLab {
+    // ---- window ----
+    constexpr int WIN_W = 1020;
+    constexpr int WIN_H = 470;
+
+    // ---- colors ----
+    inline const juce::Colour BG     = juce::Colour(0xff111111); // main background
+    inline const juce::Colour STRIP  = juce::Colour(0xff1a1a1a); // voice strip panel
+    inline const juce::Colour KNOB   = juce::Colour(0xff2b2b2b); // knob body
+    inline const juce::Colour ACCENT = juce::Colour(0xffff3b1f); // red-orange accent
+    inline const juce::Colour TEXT   = juce::Colour(0xffd8d8d8); // main text
+    inline const juce::Colour DIM    = juce::Colour(0xff8a8a8a); // dim labels
+
+    // ---- layout ----
+    constexpr int STRIP_X0    = 10;   // first strip left edge
+    constexpr int STRIP_Y     = 60;   // strip top edge
+    constexpr int STRIP_PITCH = 130;  // horizontal distance between strips
+    constexpr int STRIP_W     = 124;  // strip width
+    constexpr int STRIP_H     = 396;  // strip height
+    constexpr int KNOB_D      = 64;   // voice knob diameter
+    constexpr int BIG_KNOB_D  = 88;   // degrade knob diameter
+    constexpr int GLOBAL_X    = 806;  // global panel left edge
+    constexpr int GLOBAL_W    = 204;  // global panel width
+
+    // ---- crash-bisect switches ----
+    constexpr bool USE_CUSTOM_KNOBS = true;  // custom knob rendering
+    constexpr bool USE_ACTIVITY_TIMER = true; // 30 Hz LED flash timer
+    constexpr bool USE_FANCY_MUTE   = true;  // rounded + glowing mute buttons
+}
+
 // Dark instrument look: charcoal panels, red-orange accents, glowing mutes.
 
 class GrimeLookAndFeel : public juce::LookAndFeel_V4 {
